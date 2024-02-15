@@ -72,9 +72,7 @@ export class RokuTvPlatform implements DynamicPlatformPlugin {
 
     for (const deviceInfo of deviceInfos) {
       const uuid = this.api.hap.uuid.generate(deviceInfo.client.ip);
-
       this.withRokuAccessory(uuid, deviceInfo);
-
       // it is possible to remove platform accessories at any time using `api.unregisterPlatformAccessories`, eg.:
     }
 
