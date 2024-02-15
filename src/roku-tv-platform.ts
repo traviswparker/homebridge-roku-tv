@@ -75,13 +75,13 @@ export class RokuTvPlatform implements DynamicPlatformPlugin {
 
       this.withRokuAccessory(uuid, deviceInfo);
 
-      this.api.publishExternalAccessories(
-        PLUGIN_NAME,
-        this.accessoriesToPublish
-      );
-
       // it is possible to remove platform accessories at any time using `api.unregisterPlatformAccessories`, eg.:
     }
+
+    this.api.publishExternalAccessories(
+      PLUGIN_NAME,
+      this.accessoriesToPublish
+    );
   }
 
   withRokuAccessory(uuid: string, deviceInfo: RokuDevice) {
