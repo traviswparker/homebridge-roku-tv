@@ -1,18 +1,26 @@
-import { PlatformAccessory, Service } from "homebridge";
+import { Characteristic, Logger, PlatformAccessory, Service } from "homebridge";
+import { Client, keys } from "roku-client";
+
+import { MappedApp, RokuAppMap } from "./roku-app-map";
 import { RokuDevice, RokuTvPlatform } from "./roku-tv-platform";
 import { homeScreenActiveId } from "./settings";
-import { Client, keys } from "roku-client";
-import { HOME } from "roku-client/dist/keys";
-import { BaseAccessory } from "./base-accessory";
-import { MappedApp, RokuAppMap } from "./roku-app-map";
 
 const pollingDefault = 30000;
+const HOME = {
+  command: "Home",
+  name: "home",
+};
+
 /**
  * Platform Accessory
  * An instance of this class is created for each accessory your platform registers
  * Each accessory may expose multiple services of different service types.
  */
-export class RokuAccessory extends BaseAccessory {
+export class RokuAccessory {
+  private readonly platform: RokuTvPlatform;
+  private readonly accessory: PlatformAccessory;
+  private readonly Characteristic: typeof Characteristic;
+  private readonly logger: Logger;
   private readonly roku: Client;
   private readonly tvService: Service;
   private readonly speakerService: Service;
@@ -25,18 +33,25 @@ export class RokuAccessory extends BaseAccessory {
     private readonly device: RokuDevice,
     private readonly excludedApps: string[]
   ) {
-    super(platform, accessory);
+    this.platform = platform;
+    this.accessory = accessory;
+    this.Characteristic = platform.Characteristic;
+    this.logger = platform.log;
+
     this.roku = new Client(device.client.ip);
     this.rokuAppMap = new RokuAppMap(device.apps);
     this.logger.info(`Roku Tv Ip is: ${device.client.ip}`);
-    // set accessory information
-    this.infoService = this.withService(
-      this.platform.Service.AccessoryInformation
-    );
-    this.tvService = this.withService(this.platform.Service.Television);
-    this.speakerService = this.withService(
-      this.platform.Service.TelevisionSpeaker
-    );
+
+    this.infoService =
+      this.accessory.getService(this.platform.Service.AccessoryInformation) ||
+      this.accessory.addService(this.platform.Service.AccessoryInformation);
+    this.tvService =
+      this.accessory.getService(this.platform.Service.Television) ||
+      this.accessory.addService(this.platform.Service.Television);
+    this.speakerService =
+      this.accessory.getService(this.platform.Service.TelevisionSpeaker) ||
+      this.accessory.addService(this.platform.Service.TelevisionSpeaker);
+
     this.configureInfoService();
     this.configureSpeakerService();
     this.configureTvService();
@@ -159,9 +174,7 @@ export class RokuAccessory extends BaseAccessory {
       );
 
       const typeChar =
-        app.type === "appl"
-          ? this.Characteristic.InputSourceType.HDMI
-          : app.type === "Home"
+        app.type === "Home"
           ? this.Characteristic.InputSourceType.HOME_SCREEN
           : this.Characteristic.InputSourceType.HDMI;
 
@@ -170,7 +183,7 @@ export class RokuAccessory extends BaseAccessory {
         this.accessory.addService(
           this.platform.Service.InputSource,
           app.name,
-          app.id
+          app.id.toString()
         );
       inputService
         .setCharacteristic(this.Characteristic.Identifier, app.id)
@@ -192,7 +205,9 @@ export class RokuAccessory extends BaseAccessory {
         // the value will be the value you set for the Identifier Characteristic
         // on the Input Source service that was selected - see input sources below.
 
-        const app: MappedApp = this.rokuAppMap.getAppFromId(identifier);
+        const app: MappedApp = this.rokuAppMap.getAppFromId(
+          identifier as number
+        );
 
         this.logger.info(`set Active Input Source => ${app.name}`);
         if (app.rokuAppId === homeScreenActiveId) {

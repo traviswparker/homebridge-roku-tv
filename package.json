@@ -1,7 +1,7 @@
 {
   "displayName": "HomeBridge Roku TVs",
   "name": "homebridge-roku-tvs",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Roku TV Support for HomeKit",
   "license": "Apache-2.0",
   "repository": {

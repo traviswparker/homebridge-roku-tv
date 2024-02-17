@@ -7,11 +7,10 @@ import {
   PlatformAccessory,
   Service,
 } from "homebridge";
-
-import { homeScreenActiveId, PLUGIN_NAME } from "./settings";
 import { Client } from "roku-client";
-import { App } from "roku-client/dist/client";
+
 import { RokuAccessory } from "./roku-tv-accessory";
+import { homeScreenActiveId, PLUGIN_NAME } from "./settings";
 
 interface RokuTvPlatformConfig {
   name?: string;
@@ -76,10 +75,7 @@ export class RokuTvPlatform implements DynamicPlatformPlugin {
       // it is possible to remove platform accessories at any time using `api.unregisterPlatformAccessories`, eg.:
     }
 
-    this.api.publishExternalAccessories(
-      PLUGIN_NAME,
-      this.accessoriesToPublish
-    );
+    this.api.publishExternalAccessories(PLUGIN_NAME, this.accessoriesToPublish);
   }
 
   withRokuAccessory(uuid: string, deviceInfo: RokuDevice) {
@@ -118,6 +114,13 @@ export class RokuTvPlatform implements DynamicPlatformPlugin {
 
 export interface RokuDevice {
   client: Client;
-  apps: App[];
+  apps: RokuApp[];
   info: Record<string, string>;
+}
+
+interface RokuApp {
+  id: string;
+  name: string;
+  type: string;
+  version: string;
 }
