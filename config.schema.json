@@ -5,20 +5,68 @@
   "schema": {
     "type": "object",
     "properties": {
+      "name": {
+        "title": "Platform Name",
+        "description": "Name of the Roku TV Platform.",
+        "type": "string",
+        "default": "Roku TV Platform"
+      },
+      "devices": {
+        "title": "Devices",
+        "description": "Manually add Roku devices by specifying a name and IP address.",
+        "type": "array",
+        "items": {
+          "title": "Device",
+          "type": "object",
+          "properties": {
+            "name": {
+              "title": "Device Name",
+              "type": "string"
+            },
+            "ip": {
+              "title": "Device IP",
+              "type": "string",
+              "format": "ipv4"
+            }
+          },
+          "required": ["name", "ip"]
+        },
+        "default": []
+      },
+      "autoDiscover": {
+        "title": "Auto Discover",
+        "description": "If true, the plugin will automatically discover Roku devices on the network.",
+        "type": "boolean",
+        "default": true
+      },
       "pollingInterval": {
         "title": "Polling Interval (ms)",
-        "description": "How often to query the Roku Tv for power state and active app",
-        "type": "integer"
+        "description": "How often to query the Roku TV for power state and active app.",
+        "type": "integer",
+        "default": 30000
       },
       "excludedApps": {
         "title": "Apps To Exclude",
-        "description": "Enter the app's name that you want to hide",
+        "description": "Enter the app's name that you want to hide.",
         "type": "array",
         "items": {
           "title": "App Name",
           "type": "string"
-        }
+        },
+        "default": []
+      },
+      "excludedDevices": {
+        "title": "Excluded Devices",
+        "description": "Enter the IP address of Roku devices you want to exclude from auto-discovery.",
+        "type": "array",
+        "items": {
+          "title": "Device IP",
+          "type": "string",
+          "format": "ipv4"
+        },
+        "default": []
       }
-    }
+    },
+    "required": ["name"]
   }
 }

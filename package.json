@@ -1,15 +1,19 @@
 {
-  "displayName": "HomeBridge Roku TVs",
-  "name": "homebridge-roku-tvs",
-  "version": "1.0.3",
+  "displayName": "Homebridge Better Roku",
+  "name": "homebridge-better-roku",
+  "version": "1.0.0",
   "description": "Roku TV Support for HomeKit",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/jorge-ramirez/homebridge-roku-tv.git"
+    "url": "https://github.com/watzon/homebridge-roku-tv.git"
   },
   "bugs": {
-    "url": "https://github.com/jorge-ramirez/homebridge-roku-tv/issues"
+    "url": "https://github.com/watzon/homebridge-roku-tv/issues"
+  },
+  "author": {
+    "name": "watzon",
+    "url": "https://github.com/watzon"
   },
   "engines": {
     "node": ">=10.17.0",
@@ -31,21 +35,21 @@
     "homebridge"
   ],
   "dependencies": {
-    "roku-client": "4.0.0"
+    "roku-client": "^4.0.0"
   },
   "devDependencies": {
-    "@types/node": "13.13.6",
-    "@typescript-eslint/eslint-plugin": "2.33.0",
-    "@typescript-eslint/parser": "2.33.0",
-    "eslint": "6.8.0",
+    "@types/node": "^22.5.5",
+    "@typescript-eslint/eslint-plugin": "^2.33.0",
+    "@typescript-eslint/parser": "^2.33.0",
+    "eslint": "^6.8.0",
     "eslint-config-prettier": "6.11.0",
     "eslint-plugin-prettier": "3.1.3",
-    "hap-nodejs": "0.7.3",
-    "homebridge": "1.0.5-beta.13",
-    "nodemon": "2.0.4",
-    "prettier": "2.0.5",
-    "rimraf": "3.0.2",
-    "ts-node": "8.10.1",
-    "typescript": "3.9.2"
+    "hap-nodejs": "^1.1.1-beta.6",
+    "homebridge": "^2.0.0-beta.0",
+    "nodemon": "^2.0.4",
+    "prettier": "^2.0.5",
+    "rimraf": "^3.0.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.2"
   }
 }

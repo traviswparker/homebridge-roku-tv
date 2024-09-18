@@ -1,9 +1,10 @@
 import { Characteristic, Logger, PlatformAccessory, Service } from "homebridge";
-import { Client, keys } from "roku-client";
+import { RokuClient, keys } from "roku-client";
 
 import { MappedApp, RokuAppMap } from "./roku-app-map";
 import { RokuDevice, RokuTvPlatform } from "./roku-tv-platform";
 import { homeScreenActiveId } from "./settings";
+import { sanitizeAccessoryName } from "./utils";
 
 const pollingDefault = 30000;
 const HOME = {
@@ -21,7 +22,7 @@ export class RokuAccessory {
   private readonly accessory: PlatformAccessory;
   private readonly Characteristic: typeof Characteristic;
   private readonly logger: Logger;
-  private readonly roku: Client;
+  private readonly roku: RokuClient;
   private readonly tvService: Service;
   private readonly speakerService: Service;
   private infoService: Service;
@@ -38,7 +39,7 @@ export class RokuAccessory {
     this.Characteristic = platform.Characteristic;
     this.logger = platform.log;
 
-    this.roku = new Client(device.client.ip);
+    this.roku = new RokuClient(device.client.ip);
     this.rokuAppMap = new RokuAppMap(device.apps);
     this.logger.info(`Roku Tv Ip is: ${device.client.ip}`);
 
@@ -169,8 +170,9 @@ export class RokuAccessory {
       .getApps()
       .filter((x) => !this.excludedApps.includes(x.name));
     apps.forEach((app) => {
+      const sanitizedAppName = sanitizeAccessoryName(app.name);
       this.logger.info(
-        `Adding Input ${app.name} with info ID: ${app.id}, TYPE: ${app.type}`
+        `Adding Input ${sanitizedAppName} with info ID: ${app.id}, TYPE: ${app.type}`
       );
 
       const typeChar =
@@ -179,15 +181,15 @@ export class RokuAccessory {
           : this.Characteristic.InputSourceType.HDMI;
 
       const inputService =
-        this.accessory.getService(app.name) ||
+        this.accessory.getService(sanitizedAppName) ||
         this.accessory.addService(
           this.platform.Service.InputSource,
-          app.name,
+          sanitizedAppName,
           app.id.toString()
         );
       inputService
         .setCharacteristic(this.Characteristic.Identifier, app.id)
-        .setCharacteristic(this.Characteristic.ConfiguredName, app.name)
+        .setCharacteristic(this.Characteristic.ConfiguredName, sanitizedAppName)
         .setCharacteristic(
           this.Characteristic.IsConfigured,
           this.Characteristic.IsConfigured.CONFIGURED
@@ -314,16 +316,16 @@ export class RokuAccessory {
   }
 
   private configureInfoService() {
+    const sanitizedName = sanitizeAccessoryName(
+      this.device.info.userDeviceName
+    );
     this.infoService
       .setCharacteristic(
         this.Characteristic.Manufacturer,
         this.device.info.vendorName
       )
       .setCharacteristic(this.Characteristic.Model, this.device.info.modelName)
-      .setCharacteristic(
-        this.Characteristic.Name,
-        this.device.info.userDeviceName
-      )
+      .setCharacteristic(this.Characteristic.Name, sanitizedName)
       .setCharacteristic(
         this.Characteristic.SerialNumber,
         this.device.info.serialNumber
