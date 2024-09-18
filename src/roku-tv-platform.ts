@@ -109,16 +109,40 @@ export class RokuTvPlatform implements DynamicPlatformPlugin {
     }
 
     // Include devices from config
-    this.config.devices?.forEach((device) => discoveredIPs.add(device.ip));
-
-    const devicePromises = Array.from(discoveredIPs).map(async (ip) => {
-      const client = new RokuClient(ip);
-      const apps = await client.apps();
-      const info = await client.info();
-      return { client, apps, info };
+    this.config.devices?.forEach((device) => {
+      if (typeof device.ip === "string") {
+        discoveredIPs.add(device.ip);
+      } else {
+        this.log.warn(`Invalid IP in config: ${JSON.stringify(device)}`);
+      }
     });
 
-    return Promise.all(devicePromises);
+    this.log.debug(
+      `Discovered IPs: ${Array.from(discoveredIPs)
+        .map((ip) => JSON.stringify(ip))
+        .join(", ")}`
+    );
+
+    const devicePromises = Array.from(discoveredIPs).map(async (ip) => {
+      if (typeof ip !== "string") {
+        this.log.error(`Invalid IP address: ${JSON.stringify(ip)}`);
+        return null;
+      }
+      try {
+        // Remove 'http://' and ':8060' if present
+        const cleanIp = ip.replace(/^http:\/\//, "").replace(/:8060$/, "");
+        const client = new RokuClient(cleanIp);
+        const apps = await client.apps();
+        const info = await client.info();
+        return { client, apps, info };
+      } catch (error) {
+        this.log.error(`Error processing device ${ip}:`, error);
+        return null;
+      }
+    });
+
+    const devices = await Promise.all(devicePromises);
+    return devices.filter((device): device is RokuDevice => device !== null);
   }
 
   private processDiscoveredDevices(devices: RokuDevice[]) {
