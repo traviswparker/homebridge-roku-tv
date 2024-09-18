@@ -32,7 +32,7 @@ export class RokuAccessory {
     platform: RokuTvPlatform,
     accessory: PlatformAccessory,
     private readonly device: RokuDevice,
-    private readonly excludedApps: string[]
+    private readonly excludedApps: string[],
   ) {
     this.platform = platform;
     this.accessory = accessory;
@@ -74,11 +74,11 @@ export class RokuAccessory {
     // set sleep discovery characteristic
     this.tvService.setCharacteristic(
       this.Characteristic.SleepDiscoveryMode,
-      this.Characteristic.SleepDiscoveryMode.ALWAYS_DISCOVERABLE
+      this.Characteristic.SleepDiscoveryMode.ALWAYS_DISCOVERABLE,
     );
     this.tvService.setCharacteristic(
       this.Characteristic.ConfiguredName,
-      this.device.info.userDeviceName
+      this.device.info.userDeviceName,
     );
     this.updatePowerAndApp();
     this.configureTvActiveState();
@@ -172,7 +172,7 @@ export class RokuAccessory {
     apps.forEach((app) => {
       const sanitizedAppName = sanitizeAccessoryName(app.name);
       this.logger.info(
-        `Adding Input ${sanitizedAppName} with info ID: ${app.id}, TYPE: ${app.type}`
+        `Adding Input ${sanitizedAppName} with info ID: ${app.id}, TYPE: ${app.type}`,
       );
 
       const typeChar =
@@ -185,14 +185,14 @@ export class RokuAccessory {
         this.accessory.addService(
           this.platform.Service.InputSource,
           sanitizedAppName,
-          app.id.toString()
+          app.id.toString(),
         );
       inputService
         .setCharacteristic(this.Characteristic.Identifier, app.id)
         .setCharacteristic(this.Characteristic.ConfiguredName, sanitizedAppName)
         .setCharacteristic(
           this.Characteristic.IsConfigured,
-          this.Characteristic.IsConfigured.CONFIGURED
+          this.Characteristic.IsConfigured.CONFIGURED,
         )
         .setCharacteristic(this.Characteristic.InputSourceType, typeChar);
 
@@ -208,7 +208,7 @@ export class RokuAccessory {
         // on the Input Source service that was selected - see input sources below.
 
         const app: MappedApp = this.rokuAppMap.getAppFromId(
-          identifier as number
+          identifier as number,
         );
 
         this.logger.info(`set Active Input Source => ${app.name}`);
@@ -261,7 +261,7 @@ export class RokuAccessory {
           this.Characteristic.Active,
           isOn
             ? this.Characteristic.Active.ACTIVE
-            : this.Characteristic.Active.INACTIVE
+            : this.Characteristic.Active.INACTIVE,
         );
 
         this.updatePowerAndApp();
@@ -276,7 +276,7 @@ export class RokuAccessory {
           null,
           isOn
             ? this.Characteristic.Active.ACTIVE
-            : this.Characteristic.Active.INACTIVE
+            : this.Characteristic.Active.INACTIVE,
         );
       });
   }
@@ -285,11 +285,11 @@ export class RokuAccessory {
     this.speakerService
       .setCharacteristic(
         this.Characteristic.Active,
-        this.Characteristic.Active.ACTIVE
+        this.Characteristic.Active.ACTIVE,
       )
       .setCharacteristic(
         this.Characteristic.VolumeControlType,
-        this.Characteristic.VolumeControlType.RELATIVE
+        this.Characteristic.VolumeControlType.RELATIVE,
       );
 
     // handle volume control
@@ -317,18 +317,18 @@ export class RokuAccessory {
 
   private configureInfoService() {
     const sanitizedName = sanitizeAccessoryName(
-      this.device.info.userDeviceName
+      this.device.info.userDeviceName,
     );
     this.infoService
       .setCharacteristic(
         this.Characteristic.Manufacturer,
-        this.device.info.vendorName
+        this.device.info.vendorName,
       )
       .setCharacteristic(this.Characteristic.Model, this.device.info.modelName)
       .setCharacteristic(this.Characteristic.Name, sanitizedName)
       .setCharacteristic(
         this.Characteristic.SerialNumber,
-        this.device.info.serialNumber
+        this.device.info.serialNumber,
       );
   }
 
@@ -344,14 +344,14 @@ export class RokuAccessory {
         this.Characteristic.Active,
         powerMode === "Unknown" || powerMode === null
           ? this.Characteristic.Active.INACTIVE
-          : this.Characteristic.Active.ACTIVE
+          : this.Characteristic.Active.ACTIVE,
       );
 
       // Ensure the accessory remains accessible when the TV is off
       if (!isOn) {
         this.tvService.updateCharacteristic(
           this.Characteristic.ActiveIdentifier,
-          homeScreenActiveId
+          homeScreenActiveId,
         );
       }
     });
@@ -365,7 +365,7 @@ export class RokuAccessory {
       }
 
       this.logger.debug(
-        `Active App is: ${mappedApp.name} ${mappedApp.id} ${mappedApp.rokuAppId}`
+        `Active App is: ${mappedApp.name} ${mappedApp.id} ${mappedApp.rokuAppId}`,
       );
 
       this.tvService
@@ -374,7 +374,7 @@ export class RokuAccessory {
 
       this.tvService.updateCharacteristic(
         this.Characteristic.ActiveIdentifier,
-        mappedApp.id
+        mappedApp.id,
       );
     });
   }

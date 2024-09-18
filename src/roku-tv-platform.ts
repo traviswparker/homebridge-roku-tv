@@ -35,7 +35,7 @@ export class RokuTvPlatform implements DynamicPlatformPlugin {
   constructor(
     public readonly log: Logging,
     public readonly config: RokuTvPlatformConfig,
-    public readonly api: API
+    public readonly api: API,
   ) {
     this.Service = this.api.hap.Service;
     this.Characteristic = this.api.hap.Characteristic;
@@ -107,7 +107,7 @@ export class RokuTvPlatform implements DynamicPlatformPlugin {
     this.log.debug(
       `Discovered IPs: ${Array.from(discoveredIPs)
         .map((ip) => JSON.stringify(ip))
-        .join(", ")}`
+        .join(", ")}`,
     );
 
     const devicePromises = Array.from(discoveredIPs).map(async (ip) => {
@@ -138,7 +138,7 @@ export class RokuTvPlatform implements DynamicPlatformPlugin {
   private processDiscoveredDevices(devices: RokuDevice[]) {
     devices.forEach((device) => {
       const uuid = this.api.hap.uuid.generate(
-        `${device.client.ip}-${device.info.serialNumber}`
+        `${device.client.ip}-${device.info.serialNumber}`,
       );
 
       if (!this.accessories.find((accessory) => accessory.UUID === uuid)) {
@@ -161,7 +161,7 @@ export class RokuTvPlatform implements DynamicPlatformPlugin {
   private addAccessory(device: RokuDevice, uuid: string) {
     const accessory = new this.api.platformAccessory(
       device.info.userDeviceName,
-      uuid
+      uuid,
     );
     new RokuAccessory(this, accessory, device, this.config.excludedApps ?? []);
     this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [
@@ -176,14 +176,14 @@ export class RokuTvPlatform implements DynamicPlatformPlugin {
    */
   private updateAccessory(device: RokuDevice, uuid: string) {
     const existingAccessory = this.accessories.find(
-      (accessory) => accessory.UUID === uuid
+      (accessory) => accessory.UUID === uuid,
     );
     if (existingAccessory) {
       new RokuAccessory(
         this,
         existingAccessory,
         device,
-        this.config.excludedApps ?? []
+        this.config.excludedApps ?? [],
       );
     }
   }
@@ -198,9 +198,9 @@ export class RokuTvPlatform implements DynamicPlatformPlugin {
         !currentDevices.some(
           (device) =>
             this.api.hap.uuid.generate(
-              `${device.client.ip}-${device.info.serialNumber}`
-            ) === accessory.UUID
-        )
+              `${device.client.ip}-${device.info.serialNumber}`,
+            ) === accessory.UUID,
+        ),
     );
 
     if (staleAccessories.length > 0) {
@@ -208,10 +208,10 @@ export class RokuTvPlatform implements DynamicPlatformPlugin {
       this.api.unregisterPlatformAccessories(
         PLUGIN_NAME,
         PLATFORM_NAME,
-        staleAccessories
+        staleAccessories,
       );
       this.accessories = this.accessories.filter(
-        (accessory) => !staleAccessories.includes(accessory)
+        (accessory) => !staleAccessories.includes(accessory),
       );
     }
   }
