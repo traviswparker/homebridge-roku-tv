@@ -12,7 +12,7 @@ import {
 import { RokuClient } from "roku-client";
 
 import { RokuAccessory } from "./roku-tv-accessory";
-import { homeScreenActiveId, PLUGIN_NAME } from "./settings";
+import { PLUGIN_NAME } from "./settings";
 
 interface RokuTvPlatformConfig {
   name?: string;
@@ -27,7 +27,7 @@ export class RokuTvPlatform implements DynamicPlatformPlugin {
   public readonly Service: typeof Service;
   public readonly Characteristic: typeof Characteristic;
 
-  public readonly accessories: PlatformAccessory[] = [];
+  public accessories: PlatformAccessory[] = [];
   public readonly accessoriesToPublish: PlatformAccessory[] = [];
 
   private devicesFilePath: string;
@@ -41,8 +41,6 @@ export class RokuTvPlatform implements DynamicPlatformPlugin {
     this.Service = this.api.hap.Service;
     this.Characteristic = this.api.hap.Characteristic;
 
-    console.log(this.api.user.storagePath());
-
     this.devicesFilePath = path.join(
       this.api.user.storagePath(),
       "roku-devices.json"
@@ -50,13 +48,14 @@ export class RokuTvPlatform implements DynamicPlatformPlugin {
 
     this.loadPersistedDevices();
 
-    this.api.on("didFinishLaunching", async () => {
+    // Load cached accessories immediately
+    this.accessories.forEach((accessory) => {
+      this.configureAccessory(accessory);
+    });
+
+    this.api.on("didFinishLaunching", () => {
       this.log.debug("Executed didFinishLaunching callback");
-      try {
-        await this.discoverDevices();
-      } catch (e) {
-        this.log.error("Error during device discovery:", e);
-      }
+      this.discoverDevicesInBackground();
     });
   }
 
@@ -85,98 +84,124 @@ export class RokuTvPlatform implements DynamicPlatformPlugin {
     this.accessories.push(accessory);
   }
 
-  async discoverDevices() {
-    const discoveredIPs = new Set<string>();
-    const processedUUIDs = new Set<string>();
-
-    if (this.config.autoDiscover) {
-      this.log.info("Starting auto-discovery of Roku devices...");
-      try {
-        const devices = await RokuClient.discoverAll();
-        this.log.debug(`Auto-discovery found ${devices.length} devices`);
-        devices.forEach((d) => {
-          this.log.debug(`Auto-discovered device: ${d.ip}`);
-          if (
-            !this.config.excludedDevices?.includes(d.ip) &&
-            !this.config.devices?.find((device) => device.ip === d.ip)
-          ) {
-            this.config.devices?.push({ name: `Roku ${d.ip}`, ip: d.ip });
-            discoveredIPs.add(d.ip);
-          }
-        });
-        this.log.info(`Auto-discovered ${discoveredIPs.size} new devices.`);
-      } catch (e) {
-        this.log.error("Error during auto-discovery:", e);
-      }
+  private async discoverDevicesInBackground() {
+    try {
+      const discoveredDevices = await this.performDiscovery();
+      this.processDiscoveredDevices(discoveredDevices);
+    } catch (error) {
+      this.log.error("Error during background device discovery:", error);
     }
-
-    const uniqueDeviceIPs = new Set(
-      this.config.devices?.map((device) => device.ip) || []
-    );
-
-    this.log.debug(
-      `Unique device IPs: ${Array.from(uniqueDeviceIPs).join(", ")}`
-    );
-
-    const promises = Array.from(uniqueDeviceIPs).map(async (addr) => {
-      const d = new RokuClient(addr);
-      const apps = await d.apps();
-      const info = await d.info();
-      apps.push({
-        name: "Home",
-        type: "Home",
-        id: homeScreenActiveId,
-        version: "1",
-      });
-
-      return {
-        client: d,
-        apps,
-        info,
-      };
-    });
-
-    const deviceInfos = await Promise.all(promises);
-
-    this.log.info(`Discovered ${deviceInfos.length} devices`);
-
-    for (const deviceInfo of deviceInfos) {
-      const uuid = this.api.hap.uuid.generate(
-        `${deviceInfo.client.ip}-${deviceInfo.info.serialNumber}`
-      );
-
-      this.log.debug(
-        `Processing device: ${deviceInfo.client.ip}, UUID: ${uuid}`
-      );
-
-      if (processedUUIDs.has(uuid)) {
-        this.log.warn(
-          `Duplicate device detected with UUID: ${uuid}. Skipping.`
-        );
-        continue;
-      }
-
-      processedUUIDs.add(uuid);
-
-      this.log.debug(
-        `Generated UUID for device ${deviceInfo.info.userDeviceName}: ${uuid}`
-      );
-      this.withRokuAccessory(uuid, deviceInfo);
-      this.log.info(`Added device ${deviceInfo.info.userDeviceName}`);
-    }
-
-    this.api.publishExternalAccessories(PLUGIN_NAME, this.accessoriesToPublish);
-    this.persistDevices();
   }
 
-  persistDevices() {
-    const devicesToPersist =
-      this.config.devices?.map((device) => device.ip) || [];
+  private async performDiscovery(): Promise<RokuDevice[]> {
+    const discoveredIPs = new Set<string>();
+
+    if (this.config.autoDiscover) {
+      const devices = await RokuClient.discoverAll();
+      devices.forEach((d) => {
+        if (
+          !this.config.excludedDevices?.includes(d.ip) &&
+          !this.config.devices?.find((device) => device.ip === d.ip)
+        ) {
+          discoveredIPs.add(d.ip);
+        }
+      });
+    }
+
+    // Include devices from config
+    this.config.devices?.forEach((device) => discoveredIPs.add(device.ip));
+
+    const devicePromises = Array.from(discoveredIPs).map(async (ip) => {
+      const client = new RokuClient(ip);
+      const apps = await client.apps();
+      const info = await client.info();
+      return { client, apps, info };
+    });
+
+    return Promise.all(devicePromises);
+  }
+
+  private processDiscoveredDevices(devices: RokuDevice[]) {
+    devices.forEach((device) => {
+      const uuid = this.api.hap.uuid.generate(
+        `${device.client.ip}-${device.info.serialNumber}`
+      );
+
+      if (!this.accessories.find((accessory) => accessory.UUID === uuid)) {
+        this.log.info(`Discovered new device: ${device.info.userDeviceName}`);
+        this.addAccessory(device, uuid);
+      } else {
+        this.log.debug(`Device already exists: ${device.info.userDeviceName}`);
+        this.updateAccessory(device, uuid);
+      }
+    });
+
+    this.removeStaleAccessories(devices);
+
+    // Convert RokuDevice[] to the format expected by persistDevices
+    const devicesToPersist = devices.map((device) => ({
+      name: device.info.userDeviceName,
+      ip: device.client.ip,
+    }));
+
+    this.persistDevices(devicesToPersist);
+  }
+
+  private addAccessory(device: RokuDevice, uuid: string) {
+    const accessory = new this.api.platformAccessory(
+      device.info.userDeviceName,
+      uuid
+    );
+    new RokuAccessory(this, accessory, device, this.config.excludedApps ?? []);
+    this.api.registerPlatformAccessories(PLUGIN_NAME, PLUGIN_NAME, [accessory]);
+    this.accessories.push(accessory);
+  }
+
+  private updateAccessory(device: RokuDevice, uuid: string) {
+    const existingAccessory = this.accessories.find(
+      (accessory) => accessory.UUID === uuid
+    );
+    if (existingAccessory) {
+      new RokuAccessory(
+        this,
+        existingAccessory,
+        device,
+        this.config.excludedApps ?? []
+      );
+    }
+  }
+
+  private removeStaleAccessories(currentDevices: RokuDevice[]) {
+    const staleAccessories = this.accessories.filter(
+      (accessory) =>
+        !currentDevices.some(
+          (device) =>
+            this.api.hap.uuid.generate(
+              `${device.client.ip}-${device.info.serialNumber}`
+            ) === accessory.UUID
+        )
+    );
+
+    if (staleAccessories.length > 0) {
+      this.log.info("Removing stale accessories");
+      this.api.unregisterPlatformAccessories(
+        PLUGIN_NAME,
+        PLUGIN_NAME,
+        staleAccessories
+      );
+      this.accessories = this.accessories.filter(
+        (accessory) => !staleAccessories.includes(accessory)
+      );
+    }
+  }
+
+  private persistDevices(devices?: { name: string; ip: string }[]) {
+    const devicesToPersist = devices || this.config.devices || [];
     fs.writeFileSync(
       this.devicesFilePath,
       JSON.stringify(devicesToPersist, null, 2)
     );
-    this.log.info("Persisted discovered devices to roku-devices.json");
+    this.log.info("Persisted devices to roku-devices.json");
   }
 
   withRokuAccessory(uuid: string, deviceInfo: RokuDevice) {
@@ -222,16 +247,31 @@ export class RokuTvPlatform implements DynamicPlatformPlugin {
       this.log.warn(`Device with IP ${device.ip} already exists.`);
       return;
     }
-    this.config.devices?.push(device);
-    this.persistDevices();
-    await this.discoverDevices();
+    this.config.devices = this.config.devices || [];
+    this.config.devices.push(device);
+    this.persistDevices(this.config.devices);
+
+    // Discover and add the new device
+    const client = new RokuClient(device.ip);
+    try {
+      const apps = await client.apps();
+      const info = await client.info();
+      const newDevice = { client, apps, info };
+      const uuid = this.api.hap.uuid.generate(
+        `${device.ip}-${info.serialNumber}`
+      );
+      this.addAccessory(newDevice, uuid);
+    } catch (error) {
+      this.log.error(`Failed to add device ${device.ip}:`, error);
+    }
   }
 
   async removeDevice(ip: string) {
     this.config.devices = this.config.devices?.filter((d) => d.ip !== ip);
-    this.persistDevices();
+    this.persistDevices(this.config.devices);
     this.log.info(`Removed device with IP ${ip} from configuration.`);
-    // Optionally, unregister the accessory
+
+    // Unregister the accessory
     const uuid = this.api.hap.uuid.generate(ip);
     const accessory = this.accessories.find((a) => a.UUID === uuid);
     if (accessory) {
@@ -239,7 +279,7 @@ export class RokuTvPlatform implements DynamicPlatformPlugin {
         accessory,
       ]);
       this.log.info(`Unregistered accessory: ${accessory.displayName}`);
-      this.accessories.splice(this.accessories.indexOf(accessory), 1);
+      this.accessories = this.accessories.filter((a) => a !== accessory);
     }
   }
 }
