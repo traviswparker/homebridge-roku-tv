@@ -1,5 +1,5 @@
 import { Characteristic, Logger, PlatformAccessory, Service } from "homebridge";
-import { RokuClient, keys } from "roku-client";
+import { RokuClient, Keys } from "roku-client";
 
 import { MappedApp, RokuAppMap } from "./roku-app-map";
 import { RokuDevice, RokuTvPlatform } from "./roku-tv-platform";
@@ -94,67 +94,67 @@ export class RokuAccessory {
         switch (newValue) {
           case this.Characteristic.RemoteKey.REWIND: {
             this.logger.info("set Remote Key Pressed: REWIND");
-            this.roku.command().keypress(keys.REVERSE).send();
+            this.roku.command().keypress(Keys.REVERSE).send();
             break;
           }
           case this.Characteristic.RemoteKey.FAST_FORWARD: {
             this.logger.info("set Remote Key Pressed: FAST_FORWARD");
-            this.roku.command().keypress(keys.FORWARD).send();
+            this.roku.command().keypress(Keys.FORWARD).send();
             break;
           }
           case this.Characteristic.RemoteKey.NEXT_TRACK: {
             this.logger.info("set Remote Key Pressed: NEXT_TRACK");
-            this.roku.command().keypress(keys.RIGHT).send();
+            this.roku.command().keypress(Keys.RIGHT).send();
             break;
           }
           case this.Characteristic.RemoteKey.PREVIOUS_TRACK: {
             this.logger.info("set Remote Key Pressed: PREVIOUS_TRACK");
-            this.roku.command().keypress(keys.LEFT).send();
+            this.roku.command().keypress(Keys.LEFT).send();
             break;
           }
           case this.Characteristic.RemoteKey.ARROW_UP: {
             this.logger.info("set Remote Key Pressed: ARROW_UP");
-            this.roku.command().keypress(keys.UP).send();
+            this.roku.command().keypress(Keys.UP).send();
             break;
           }
           case this.Characteristic.RemoteKey.ARROW_DOWN: {
             this.logger.info("set Remote Key Pressed: ARROW_DOWN");
-            this.roku.command().keypress(keys.DOWN).send();
+            this.roku.command().keypress(Keys.DOWN).send();
             break;
           }
           case this.Characteristic.RemoteKey.ARROW_LEFT: {
             this.logger.info("set Remote Key Pressed: ARROW_LEFT");
-            this.roku.command().keypress(keys.LEFT).send();
+            this.roku.command().keypress(Keys.LEFT).send();
             break;
           }
           case this.Characteristic.RemoteKey.ARROW_RIGHT: {
             this.logger.info("set Remote Key Pressed: ARROW_RIGHT");
-            this.roku.command().keypress(keys.RIGHT).send();
+            this.roku.command().keypress(Keys.RIGHT).send();
             break;
           }
           case this.Characteristic.RemoteKey.SELECT: {
             this.logger.info("set Remote Key Pressed: SELECT");
-            this.roku.command().keypress(keys.SELECT).send();
+            this.roku.command().keypress(Keys.SELECT).send();
             break;
           }
           case this.Characteristic.RemoteKey.BACK: {
             this.logger.info("set Remote Key Pressed: BACK");
-            this.roku.command().keypress(keys.BACK).send();
+            this.roku.command().keypress(Keys.BACK).send();
             break;
           }
           case this.Characteristic.RemoteKey.EXIT: {
             this.logger.info("set Remote Key Pressed: EXIT");
-            this.roku.command().keypress(keys.HOME).send();
+            this.roku.command().keypress(Keys.HOME).send();
             break;
           }
           case this.Characteristic.RemoteKey.PLAY_PAUSE: {
             this.logger.info("set Remote Key Pressed: PLAY_PAUSE");
-            this.roku.command().keypress(keys.PLAY).send();
+            this.roku.command().keypress(Keys.PLAY).send();
             break;
           }
           case this.Characteristic.RemoteKey.INFORMATION: {
             this.logger.info("set Remote Key Pressed: INFORMATION");
-            this.roku.command().keypress(keys.INFO).send();
+            this.roku.command().keypress(Keys.INFO).send();
             break;
           }
         }

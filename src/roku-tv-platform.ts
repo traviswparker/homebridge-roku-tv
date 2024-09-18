@@ -72,6 +72,10 @@ export class RokuTvPlatform implements DynamicPlatformPlugin {
           this.config.devices?.push({ name: `Roku ${ip}`, ip });
         }
       });
+      // Remove duplicates
+      this.config.devices = Array.from(
+        new Set(this.config.devices.map((device) => JSON.stringify(device)))
+      ).map((json) => JSON.parse(json) as { name: string; ip: string });
     }
   }
 
@@ -128,7 +132,12 @@ export class RokuTvPlatform implements DynamicPlatformPlugin {
     this.log.info(`Discovered ${deviceInfos.length} devices`);
 
     for (const deviceInfo of deviceInfos) {
-      const uuid = this.api.hap.uuid.generate(deviceInfo.client.ip);
+      const uuid = this.api.hap.uuid.generate(
+        `${deviceInfo.client.ip}-${deviceInfo.info.serialNumber}`
+      );
+      this.log.debug(
+        `Generated UUID for device ${deviceInfo.info.userDeviceName}: ${uuid}`
+      );
       this.withRokuAccessory(uuid, deviceInfo);
       this.log.info(`Added device ${deviceInfo.info.userDeviceName}`);
     }
