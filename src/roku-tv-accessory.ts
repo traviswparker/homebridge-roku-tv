@@ -334,29 +334,24 @@ export class RokuAccessory {
 
   private updatePowerAndApp() {
     this.roku.info().then((info) => {
-      const isOn = info["powerMode"] === "PowerOn";
+      const powerMode = info["powerMode"];
+      const isOn = powerMode === "PowerOn";
 
-      this.logger.debug(`Power State is: ${info["powerMode"]} ${isOn}`);
-      const isAlreadyON =
-        this.tvService.getCharacteristic(this.Characteristic.Active).value ===
-        this.Characteristic.Active.ACTIVE;
-
-      if (isOn == isAlreadyON) {
-        return;
-      }
+      this.logger.debug(`Power Mode is: ${powerMode}`);
+      this.logger.debug(`Is On: ${isOn}`);
 
       this.tvService.updateCharacteristic(
         this.Characteristic.Active,
-        isOn
-          ? this.Characteristic.Active.ACTIVE
-          : this.Characteristic.Active.INACTIVE
+        powerMode === "Unknown" || powerMode === null
+          ? this.Characteristic.Active.INACTIVE
+          : this.Characteristic.Active.ACTIVE
       );
 
       // Ensure the accessory remains accessible when the TV is off
       if (!isOn) {
         this.tvService.updateCharacteristic(
           this.Characteristic.ActiveIdentifier,
-          homeScreenActiveId // or a default value
+          homeScreenActiveId
         );
       }
     });
@@ -364,6 +359,10 @@ export class RokuAccessory {
     this.roku.active().then((app) => {
       const rokuId = app ? app.id : homeScreenActiveId;
       const mappedApp = this.rokuAppMap.getAppFromRokuId(rokuId);
+
+      if (!mappedApp) {
+        return;
+      }
 
       this.logger.debug(
         `Active App is: ${mappedApp.name} ${mappedApp.id} ${mappedApp.rokuAppId}`
