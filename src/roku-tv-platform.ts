@@ -87,12 +87,15 @@ export class RokuTvPlatform implements DynamicPlatformPlugin {
 
   async discoverDevices() {
     const discoveredIPs = new Set<string>();
+    const processedUUIDs = new Set<string>();
 
     if (this.config.autoDiscover) {
       this.log.info("Starting auto-discovery of Roku devices...");
       try {
         const devices = await RokuClient.discoverAll();
+        this.log.debug(`Auto-discovery found ${devices.length} devices`);
         devices.forEach((d) => {
+          this.log.debug(`Auto-discovered device: ${d.ip}`);
           if (
             !this.config.excludedDevices?.includes(d.ip) &&
             !this.config.devices?.find((device) => device.ip === d.ip)
@@ -107,9 +110,12 @@ export class RokuTvPlatform implements DynamicPlatformPlugin {
       }
     }
 
-    // Use a Set to ensure unique IPs
     const uniqueDeviceIPs = new Set(
       this.config.devices?.map((device) => device.ip) || []
+    );
+
+    this.log.debug(
+      `Unique device IPs: ${Array.from(uniqueDeviceIPs).join(", ")}`
     );
 
     const promises = Array.from(uniqueDeviceIPs).map(async (addr) => {
@@ -132,12 +138,26 @@ export class RokuTvPlatform implements DynamicPlatformPlugin {
 
     const deviceInfos = await Promise.all(promises);
 
-    this.log.info(`Discovered ${deviceInfos.length} unique devices`);
+    this.log.info(`Discovered ${deviceInfos.length} devices`);
 
     for (const deviceInfo of deviceInfos) {
       const uuid = this.api.hap.uuid.generate(
         `${deviceInfo.client.ip}-${deviceInfo.info.serialNumber}`
       );
+
+      this.log.debug(
+        `Processing device: ${deviceInfo.client.ip}, UUID: ${uuid}`
+      );
+
+      if (processedUUIDs.has(uuid)) {
+        this.log.warn(
+          `Duplicate device detected with UUID: ${uuid}. Skipping.`
+        );
+        continue;
+      }
+
+      processedUUIDs.add(uuid);
+
       this.log.debug(
         `Generated UUID for device ${deviceInfo.info.userDeviceName}: ${uuid}`
       );
