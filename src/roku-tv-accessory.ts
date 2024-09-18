@@ -6,7 +6,7 @@ import { RokuDevice, RokuTvPlatform } from "./roku-tv-platform";
 import { homeScreenActiveId } from "./settings";
 import { sanitizeAccessoryName } from "./utils";
 
-const pollingDefault = 30000;
+const pollingDefault = 5000;
 const HOME = {
   command: "Home",
   name: "home",
@@ -166,6 +166,10 @@ export class RokuAccessory {
   }
 
   private configureAppInputs() {
+    if (this.excludedApps.length > 0) {
+      this.logger.info(`Excluding ${this.excludedApps.length} apps`);
+      this.logger.debug(this.excludedApps.join(", "));
+    }
     const apps = this.rokuAppMap
       .getApps()
       .filter((x) => !this.excludedApps.includes(x.name));
@@ -248,36 +252,41 @@ export class RokuAccessory {
       .getCharacteristic(this.Characteristic.Active)
       .on("set", async (onOrOff, callback) => {
         this.logger.info("set Active => setNewValue: " + onOrOff);
-        await this.roku
-          .command()
-          .keypress({
-            command: onOrOff ? "poweron" : "poweroff",
-            name: "power",
-          })
-          .send();
-        const info = await this.roku.info();
-        const isOn = info["powerMode"] === "PowerOn";
-        this.tvService.updateCharacteristic(
-          this.Characteristic.Active,
-          isOn
-            ? this.Characteristic.Active.ACTIVE
-            : this.Characteristic.Active.INACTIVE,
-        );
+        try {
+          // Send the power command
+          await this.roku
+            .command()
+            .keypress({
+              command: onOrOff ? "poweron" : "poweroff",
+              name: "power",
+            })
+            .send();
 
-        this.updatePowerAndApp();
+          // Await the completion of power state update
+          await this.updatePowerAndApp();
 
-        callback(null);
+          // Callback after successful update
+          callback(null);
+        } catch (error) {
+          this.logger.error("Error setting Active characteristic:", error);
+          callback(error as Error);
+        }
       })
       .on("get", async (callback) => {
-        const info = await this.roku.info();
-        const isOn = info["powerMode"] === "PowerOn";
-        this.logger.info(`Getting Power State: ${info["powerMode"]}`);
-        callback(
-          null,
-          isOn
-            ? this.Characteristic.Active.ACTIVE
-            : this.Characteristic.Active.INACTIVE,
-        );
+        try {
+          const info = await this.roku.info();
+          const isOn = info["powerMode"] === "PowerOn";
+          this.logger.info(`Getting Power State: ${info["powerMode"]}`);
+          callback(
+            null,
+            isOn
+              ? this.Characteristic.Active.ACTIVE
+              : this.Characteristic.Active.INACTIVE,
+          );
+        } catch (error) {
+          this.logger.error("Error getting Active characteristic:", error);
+          callback(error as Error);
+        }
       });
   }
 
@@ -332,8 +341,9 @@ export class RokuAccessory {
       );
   }
 
-  private updatePowerAndApp() {
-    this.roku.info().then((info) => {
+  private async updatePowerAndApp() {
+    try {
+      const info = await this.roku.info();
       const powerMode = info["powerMode"];
       const isOn = powerMode === "PowerOn";
 
@@ -342,9 +352,9 @@ export class RokuAccessory {
 
       this.tvService.updateCharacteristic(
         this.Characteristic.Active,
-        powerMode === "Unknown" || powerMode === null
-          ? this.Characteristic.Active.INACTIVE
-          : this.Characteristic.Active.ACTIVE,
+        isOn
+          ? this.Characteristic.Active.ACTIVE
+          : this.Characteristic.Active.INACTIVE,
       );
 
       // Ensure the accessory remains accessible when the TV is off
@@ -354,28 +364,22 @@ export class RokuAccessory {
           homeScreenActiveId,
         );
       }
-    });
 
-    this.roku.active().then((app) => {
+      const app = await this.roku.active();
       const rokuId = app ? app.id : homeScreenActiveId;
       const mappedApp = this.rokuAppMap.getAppFromRokuId(rokuId);
 
-      if (!mappedApp) {
-        return;
+      if (mappedApp) {
+        this.logger.debug(
+          `Active App is: ${mappedApp.name} ${mappedApp.id} ${mappedApp.rokuAppId}`,
+        );
+
+        this.tvService
+          .getCharacteristic(this.Characteristic.ActiveIdentifier)
+          .updateValue(mappedApp.id);
       }
-
-      this.logger.debug(
-        `Active App is: ${mappedApp.name} ${mappedApp.id} ${mappedApp.rokuAppId}`,
-      );
-
-      this.tvService
-        .getCharacteristic(this.Characteristic.ActiveIdentifier)
-        .updateValue(mappedApp.id);
-
-      this.tvService.updateCharacteristic(
-        this.Characteristic.ActiveIdentifier,
-        mappedApp.id,
-      );
-    });
+    } catch (error) {
+      this.logger.error("Error updating power and app state:", error);
+    }
   }
 }
