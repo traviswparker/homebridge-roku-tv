@@ -116,9 +116,7 @@ export class RokuTvPlatform implements DynamicPlatformPlugin {
         return null;
       }
       try {
-        // Remove 'http://' and ':8060' if present
-        const cleanIp = ip.replace(/^http:\/\//, "").replace(/:8060$/, "");
-        const client = new RokuClient(cleanIp);
+        const client = new RokuClient(ip);
         const apps = await client.apps();
         const info = await client.info();
         return { client, apps, info };

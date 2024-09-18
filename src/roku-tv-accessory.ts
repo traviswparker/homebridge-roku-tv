@@ -332,7 +332,7 @@ export class RokuAccessory {
       );
   }
 
-  updatePowerAndApp() {
+  private updatePowerAndApp() {
     this.roku.info().then((info) => {
       const isOn = info["powerMode"] === "PowerOn";
 
@@ -351,6 +351,14 @@ export class RokuAccessory {
           ? this.Characteristic.Active.ACTIVE
           : this.Characteristic.Active.INACTIVE
       );
+
+      // Ensure the accessory remains accessible when the TV is off
+      if (!isOn) {
+        this.tvService.updateCharacteristic(
+          this.Characteristic.ActiveIdentifier,
+          homeScreenActiveId // or a default value
+        );
+      }
     });
 
     this.roku.active().then((app) => {

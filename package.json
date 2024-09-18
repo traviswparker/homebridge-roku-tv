@@ -15,6 +15,10 @@
     "name": "watzon",
     "url": "https://github.com/watzon"
   },
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/watzon"
+  },
   "engines": {
     "node": ">=10.17.0",
     "homebridge": ">0.4.53"
