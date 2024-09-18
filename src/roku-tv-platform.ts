@@ -6,6 +6,7 @@ import {
   PlatformAccessory,
   Service,
   PlatformConfig,
+  Categories,
 } from "homebridge";
 import { RokuClient } from "roku-client";
 
@@ -57,7 +58,7 @@ export class RokuTvPlatform implements DynamicPlatformPlugin {
    */
   configureAccessory(accessory: PlatformAccessory) {
     this.log.info("Loading accessory from cache:", accessory.displayName);
-
+    accessory.category = Categories.TELEVISION;
     this.accessories.push(accessory);
   }
 
@@ -167,6 +168,7 @@ export class RokuTvPlatform implements DynamicPlatformPlugin {
     this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [
       accessory,
     ]);
+    accessory.category = Categories.TELEVISION;
     this.accessories.push(accessory);
   }
 

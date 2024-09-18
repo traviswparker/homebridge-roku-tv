@@ -1,7 +1,7 @@
 {
   "displayName": "Homebridge Better Roku",
   "name": "homebridge-better-roku",
-  "version": "1.0.9",
+  "version": "1.0.11",
   "description": "Roku TV Support for HomeKit",
   "license": "Apache-2.0",
   "repository": {
