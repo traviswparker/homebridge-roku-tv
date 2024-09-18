@@ -233,9 +233,9 @@ export class RokuAccessory {
         }
 
         const app = this.rokuAppMap.getAppFromRokuId(rokuApp.id);
-        this.logger.info(`Get Active Input Source: ${app.name}`);
 
         if (app) {
+          this.logger.info(`Get Active Input Source: ${app.name}`);
           callback(null, app.id);
         } else {
           callback(null, homeScreenActiveId);
