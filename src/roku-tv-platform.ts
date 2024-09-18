@@ -8,14 +8,14 @@ import {
   Logging,
   PlatformAccessory,
   Service,
+  PlatformConfig,
 } from "homebridge";
 import { RokuClient } from "roku-client";
 
 import { RokuAccessory } from "./roku-tv-accessory";
-import { PLUGIN_NAME } from "./settings";
+import { PLUGIN_NAME, PLATFORM_NAME } from "./settings";
 
-interface RokuTvPlatformConfig {
-  name?: string;
+interface RokuTvPlatformConfig extends PlatformConfig {
   excludedDevices?: string[];
   excludedApps?: string[];
   pollingInterval?: number;
@@ -37,7 +37,6 @@ export class RokuTvPlatform implements DynamicPlatformPlugin {
     public readonly config: RokuTvPlatformConfig,
     public readonly api: API
   ) {
-    this.log.debug("Finished initializing platform:", this.config.name);
     this.Service = this.api.hap.Service;
     this.Characteristic = this.api.hap.Characteristic;
 
@@ -177,7 +176,9 @@ export class RokuTvPlatform implements DynamicPlatformPlugin {
       uuid
     );
     new RokuAccessory(this, accessory, device, this.config.excludedApps ?? []);
-    this.api.registerPlatformAccessories(PLUGIN_NAME, PLUGIN_NAME, [accessory]);
+    this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [
+      accessory,
+    ]);
     this.accessories.push(accessory);
   }
 
@@ -210,7 +211,7 @@ export class RokuTvPlatform implements DynamicPlatformPlugin {
       this.log.info("Removing stale accessories");
       this.api.unregisterPlatformAccessories(
         PLUGIN_NAME,
-        PLUGIN_NAME,
+        PLATFORM_NAME,
         staleAccessories
       );
       this.accessories = this.accessories.filter(
@@ -299,7 +300,7 @@ export class RokuTvPlatform implements DynamicPlatformPlugin {
     const uuid = this.api.hap.uuid.generate(ip);
     const accessory = this.accessories.find((a) => a.UUID === uuid);
     if (accessory) {
-      this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLUGIN_NAME, [
+      this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [
         accessory,
       ]);
       this.log.info(`Unregistered accessory: ${accessory.displayName}`);

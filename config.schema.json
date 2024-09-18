@@ -5,12 +5,6 @@
   "schema": {
     "type": "object",
     "properties": {
-      "name": {
-        "title": "Platform Name",
-        "description": "Name of the Roku TV Platform.",
-        "type": "string",
-        "default": "Roku TV Platform"
-      },
       "devices": {
         "title": "Devices",
         "description": "Manually add Roku devices by specifying a name and IP address.",
