@@ -5,6 +5,12 @@
   "schema": {
     "type": "object",
     "properties": {
+      "name": {
+        "type": "string",
+        "title": "Name",
+        "required": true,
+        "default": "Roku TVs"
+      },
       "devices": {
         "title": "Devices",
         "description": "Manually add Roku devices by specifying a name and IP address.",
@@ -23,7 +29,10 @@
               "format": "ipv4"
             }
           },
-          "required": ["name", "ip"]
+          "required": [
+            "name",
+            "ip"
+          ]
         },
         "default": []
       },
@@ -61,6 +70,8 @@
         "default": []
       }
     },
-    "required": ["name"]
+    "required": [
+      "name"
+    ]
   }
 }
