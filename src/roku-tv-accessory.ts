@@ -307,7 +307,7 @@ export class RokuAccessory {
       });
     this.speakerService
       .getCharacteristic(this.Characteristic.Mute)
-      .on("set", (incOrDec, callback) => {
+      .on("set", (_incOrDec, callback) => {
         this.logger.info("Toggling Mute");
         this.roku.command().volumeMute().send();
 

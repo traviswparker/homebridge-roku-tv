@@ -1,8 +1,5 @@
-import fs from "fs";
-import path from "path";
 import {
   API,
-  Categories,
   Characteristic,
   DynamicPlatformPlugin,
   Logging,
@@ -30,8 +27,11 @@ export class RokuTvPlatform implements DynamicPlatformPlugin {
   public accessories: PlatformAccessory[] = [];
   public readonly accessoriesToPublish: PlatformAccessory[] = [];
 
-  private devicesFilePath: string;
-
+  /**
+   * Constructor for the RokuTvPlatform class.
+   * Initializes the platform with the provided logging, configuration, and API.
+   * Sets up event listeners and loads cached accessories.
+   */
   constructor(
     public readonly log: Logging,
     public readonly config: RokuTvPlatformConfig,
@@ -39,13 +39,6 @@ export class RokuTvPlatform implements DynamicPlatformPlugin {
   ) {
     this.Service = this.api.hap.Service;
     this.Characteristic = this.api.hap.Characteristic;
-
-    this.devicesFilePath = path.join(
-      this.api.user.storagePath(),
-      "roku-devices.json"
-    );
-
-    this.loadPersistedDevices();
 
     // Load cached accessories immediately
     this.accessories.forEach((accessory) => {
@@ -58,31 +51,21 @@ export class RokuTvPlatform implements DynamicPlatformPlugin {
     });
   }
 
-  loadPersistedDevices() {
-    if (fs.existsSync(this.devicesFilePath)) {
-      const data = fs.readFileSync(this.devicesFilePath, "utf-8");
-      const persistedDevices: string[] = JSON.parse(data);
-      this.log.info("Loaded persisted devices from roku-devices.json");
-      // Merge persisted devices into config.devices if not already present
-      this.config.devices = this.config.devices || [];
-      persistedDevices.forEach((ip) => {
-        if (!this.config.devices?.find((device) => device.ip === ip)) {
-          this.config.devices?.push({ name: `Roku ${ip}`, ip });
-        }
-      });
-      // Remove duplicates
-      this.config.devices = Array.from(
-        new Set(this.config.devices.map((device) => JSON.stringify(device)))
-      ).map((json) => JSON.parse(json) as { name: string; ip: string });
-    }
-  }
-
+  /**
+   * Configures a cached accessory.
+   * Logs the loading of the accessory and adds it to the accessories array.
+   */
   configureAccessory(accessory: PlatformAccessory) {
     this.log.info("Loading accessory from cache:", accessory.displayName);
 
     this.accessories.push(accessory);
   }
 
+  /**
+   * Discovers devices in the background.
+   * Performs discovery and processes the discovered devices.
+   * Logs any errors that occur during the discovery process.
+   */
   private async discoverDevicesInBackground() {
     try {
       const discoveredDevices = await this.performDiscovery();
@@ -92,6 +75,11 @@ export class RokuTvPlatform implements DynamicPlatformPlugin {
     }
   }
 
+  /**
+   * Performs the discovery of Roku devices.
+   * Discovers devices through auto-discovery and from the configuration.
+   * Returns an array of discovered RokuDevice objects.
+   */
   private async performDiscovery(): Promise<RokuDevice[]> {
     const discoveredIPs = new Set<string>();
 
@@ -144,6 +132,11 @@ export class RokuTvPlatform implements DynamicPlatformPlugin {
     return devices.filter((device): device is RokuDevice => device !== null);
   }
 
+  /**
+   * Processes the discovered devices.
+   * Adds new accessories, updates existing ones, removes stale accessories,
+   * and persists the device information.
+   */
   private processDiscoveredDevices(devices: RokuDevice[]) {
     devices.forEach((device) => {
       const uuid = this.api.hap.uuid.generate(
@@ -160,16 +153,13 @@ export class RokuTvPlatform implements DynamicPlatformPlugin {
     });
 
     this.removeStaleAccessories(devices);
-
-    // Convert RokuDevice[] to the format expected by persistDevices
-    const devicesToPersist = devices.map((device) => ({
-      name: device.info.userDeviceName,
-      ip: device.client.ip,
-    }));
-
-    this.persistDevices(devicesToPersist);
   }
 
+  /**
+   * Adds a new accessory for a discovered device.
+   * Creates a new PlatformAccessory, configures it with RokuAccessory,
+   * and registers it with the platform.
+   */
   private addAccessory(device: RokuDevice, uuid: string) {
     const accessory = new this.api.platformAccessory(
       device.info.userDeviceName,
@@ -182,6 +172,10 @@ export class RokuTvPlatform implements DynamicPlatformPlugin {
     this.accessories.push(accessory);
   }
 
+  /**
+   * Updates an existing accessory for a discovered device.
+   * Finds the existing accessory and reconfigures it with the updated device information.
+   */
   private updateAccessory(device: RokuDevice, uuid: string) {
     const existingAccessory = this.accessories.find(
       (accessory) => accessory.UUID === uuid
@@ -196,6 +190,10 @@ export class RokuTvPlatform implements DynamicPlatformPlugin {
     }
   }
 
+  /**
+   * Removes stale accessories that are no longer present in the current devices list.
+   * Unregisters the stale accessories from the platform and removes them from the accessories array.
+   */
   private removeStaleAccessories(currentDevices: RokuDevice[]) {
     const staleAccessories = this.accessories.filter(
       (accessory) =>
@@ -217,94 +215,6 @@ export class RokuTvPlatform implements DynamicPlatformPlugin {
       this.accessories = this.accessories.filter(
         (accessory) => !staleAccessories.includes(accessory)
       );
-    }
-  }
-
-  private persistDevices(devices?: { name: string; ip: string }[]) {
-    const devicesToPersist = devices || this.config.devices || [];
-    fs.writeFileSync(
-      this.devicesFilePath,
-      JSON.stringify(devicesToPersist, null, 2)
-    );
-    this.log.info("Persisted devices to roku-devices.json");
-  }
-
-  withRokuAccessory(uuid: string, deviceInfo: RokuDevice) {
-    const existingAccessory = this.accessories.find(
-      (accessory) => accessory.UUID === uuid
-    );
-
-    if (existingAccessory) {
-      this.log.info(
-        "Restoring existing accessory from cache:",
-        existingAccessory.displayName
-      );
-
-      new RokuAccessory(
-        this,
-        existingAccessory,
-        deviceInfo,
-        this.config.excludedApps ?? []
-      );
-    } else {
-      const deviceName =
-        this.config.devices?.find(
-          (device) => device.ip === deviceInfo.client.ip
-        )?.name || deviceInfo.info.userDeviceName;
-
-      const accessory = new this.api.platformAccessory(
-        deviceName,
-        uuid,
-        Categories.TELEVISION
-      );
-      new RokuAccessory(
-        this,
-        accessory,
-        deviceInfo,
-        this.config.excludedApps ?? []
-      );
-      this.accessoriesToPublish.push(accessory);
-    }
-  }
-
-  async addDevice(device: { name: string; ip: string }) {
-    if (this.config.devices?.find((d) => d.ip === device.ip)) {
-      this.log.warn(`Device with IP ${device.ip} already exists.`);
-      return;
-    }
-    this.config.devices = this.config.devices || [];
-    this.config.devices.push(device);
-    this.persistDevices(this.config.devices);
-
-    // Discover and add the new device
-    const client = new RokuClient(device.ip);
-    try {
-      const apps = await client.apps();
-      const info = await client.info();
-      const newDevice = { client, apps, info };
-      const uuid = this.api.hap.uuid.generate(
-        `${device.ip}-${info.serialNumber}`
-      );
-      this.addAccessory(newDevice, uuid);
-    } catch (error) {
-      this.log.error(`Failed to add device ${device.ip}:`, error);
-    }
-  }
-
-  async removeDevice(ip: string) {
-    this.config.devices = this.config.devices?.filter((d) => d.ip !== ip);
-    this.persistDevices(this.config.devices);
-    this.log.info(`Removed device with IP ${ip} from configuration.`);
-
-    // Unregister the accessory
-    const uuid = this.api.hap.uuid.generate(ip);
-    const accessory = this.accessories.find((a) => a.UUID === uuid);
-    if (accessory) {
-      this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [
-        accessory,
-      ]);
-      this.log.info(`Unregistered accessory: ${accessory.displayName}`);
-      this.accessories = this.accessories.filter((a) => a !== accessory);
     }
   }
 }
