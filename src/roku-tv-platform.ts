@@ -107,9 +107,12 @@ export class RokuTvPlatform implements DynamicPlatformPlugin {
       }
     }
 
-    const allDeviceIPs = this.config.devices?.map((device) => device.ip) || [];
+    // Use a Set to ensure unique IPs
+    const uniqueDeviceIPs = new Set(
+      this.config.devices?.map((device) => device.ip) || []
+    );
 
-    const promises = allDeviceIPs.map(async (addr) => {
+    const promises = Array.from(uniqueDeviceIPs).map(async (addr) => {
       const d = new RokuClient(addr);
       const apps = await d.apps();
       const info = await d.info();
@@ -129,7 +132,7 @@ export class RokuTvPlatform implements DynamicPlatformPlugin {
 
     const deviceInfos = await Promise.all(promises);
 
-    this.log.info(`Discovered ${deviceInfos.length} devices`);
+    this.log.info(`Discovered ${deviceInfos.length} unique devices`);
 
     for (const deviceInfo of deviceInfos) {
       const uuid = this.api.hap.uuid.generate(
