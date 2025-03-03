@@ -9,7 +9,6 @@ import {
   Categories,
 } from "homebridge";
 import { RokuClient } from "roku-client";
-
 import { RokuAccessory } from "./roku-tv-accessory";
 import { PLUGIN_NAME, PLATFORM_NAME } from "./settings";
 
@@ -26,7 +25,6 @@ export class RokuTvPlatform implements DynamicPlatformPlugin {
   public readonly Characteristic: typeof Characteristic;
 
   public accessories: PlatformAccessory[] = [];
-  public readonly accessoriesToPublish: PlatformAccessory[] = [];
 
   /**
    * Constructor for the RokuTvPlatform class.
@@ -152,6 +150,7 @@ export class RokuTvPlatform implements DynamicPlatformPlugin {
     });
 
     this.removeStaleAccessories(devices);
+    this.api.publishExternalAccessories(PLUGIN_NAME, this.accessories);
   }
 
   /**
@@ -165,9 +164,11 @@ export class RokuTvPlatform implements DynamicPlatformPlugin {
       uuid,
     );
     new RokuAccessory(this, accessory, device, this.config.excludedApps ?? []);
+    /*
     this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [
       accessory,
     ]);
+    */
     accessory.category = Categories.TELEVISION;
     this.accessories.push(accessory);
   }
