@@ -1,25 +1,21 @@
 {
-  "displayName": "Homebridge Better Roku",
-  "name": "homebridge-better-roku",
+  "displayName": "Homebridge Roku TV",
+  "name": "homebridge-roku-tv",
   "version": "1.0.13",
   "description": "Roku TV Support for HomeKit",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/watzon/homebridge-roku-tv.git"
+    "url": "https://github.com/traviswparker/homebridge-roku-tv.git"
   },
   "bugs": {
-    "url": "https://github.com/watzon/homebridge-roku-tv/issues"
+    "url": "https://github.com/traviswparker/homebridge-roku-tv/issues"
   },
   "author": {
-    "name": "watzon",
-    "url": "https://github.com/watzon"
+    "name": "traviswparker",
+    "url": "https://github.com/traviswparker"
   },
-  "funding": {
-    "type": "github",
-    "url": "https://github.com/sponsors/watzon"
-  },
-  "homepage": "https://github.com/watzon/homebridge-roku-tv#readme",
+  "homepage": "https://github.com/traviswparker/homebridge-roku-tv#readme",
   "engines": {
     "node": "^18.20.4 || ^20.16.0 || ^22.6.0",
     "homebridge": "^1.8.0 || ^2.0.0-beta.0"

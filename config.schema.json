@@ -1,5 +1,5 @@
 {
-  "pluginAlias": "BetterRokuTVs",
+  "pluginAlias": "Roku",
   "pluginType": "platform",
   "singular": true,
   "schema": {
@@ -9,7 +9,7 @@
         "type": "string",
         "title": "Name",
         "required": true,
-        "default": "Roku TVs"
+        "default": "Roku"
       },
       "devices": {
         "title": "Devices",
