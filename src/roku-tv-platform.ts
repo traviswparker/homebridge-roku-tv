@@ -10,7 +10,7 @@ import {
 } from "homebridge";
 import { RokuClient } from "roku-client";
 import { RokuAccessory } from "./roku-tv-accessory";
-import { PLUGIN_NAME, PLATFORM_NAME } from "./settings";
+import { PLUGIN_NAME /*, PLATFORM_NAME*/ } from "./settings";
 
 interface RokuTvPlatformConfig extends PlatformConfig {
   excludedDevices?: string[];
@@ -149,7 +149,7 @@ export class RokuTvPlatform implements DynamicPlatformPlugin {
       }
     });
 
-    this.removeStaleAccessories(devices);
+    //this.removeStaleAccessories(devices);
     this.api.publishExternalAccessories(PLUGIN_NAME, this.accessories);
   }
 
@@ -163,13 +163,13 @@ export class RokuTvPlatform implements DynamicPlatformPlugin {
       device.info.userDeviceName,
       uuid,
     );
-    new RokuAccessory(this, accessory, device, this.config.excludedApps ?? []);
-    /*
-    this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [
-      accessory,
-    ]);
-    */
     accessory.category = Categories.TELEVISION;
+    new RokuAccessory(this, accessory, device, this.config.excludedApps ?? []);
+ 
+    /*this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [
+      accessory,
+    ]);*/
+    
     this.accessories.push(accessory);
   }
 
@@ -194,7 +194,7 @@ export class RokuTvPlatform implements DynamicPlatformPlugin {
   /**
    * Removes stale accessories that are no longer present in the current devices list.
    * Unregisters the stale accessories from the platform and removes them from the accessories array.
-   */
+   
   private removeStaleAccessories(currentDevices: RokuDevice[]) {
     const staleAccessories = this.accessories.filter(
       (accessory) =>
@@ -217,7 +217,7 @@ export class RokuTvPlatform implements DynamicPlatformPlugin {
         (accessory) => !staleAccessories.includes(accessory),
       );
     }
-  }
+  }*/
 }
 
 export interface RokuDevice {

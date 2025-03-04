@@ -229,7 +229,13 @@ export class RokuAccessory {
         callback(null);
       })
       .on("get", async (callback) => {
-        const rokuApp = await this.roku.active();
+        let rokuApp;
+        try { 
+             rokuApp = await this.roku.active();
+        } catch (e) {
+            this.logger.error("Failed to get active app", e);
+            rokuApp = null;
+        }
 
         if (rokuApp == null) {
           callback(null, homeScreenActiveId);
