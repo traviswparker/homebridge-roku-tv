@@ -10,7 +10,7 @@ import {
 } from "homebridge";
 import { RokuClient } from "roku-client";
 import { RokuAccessory } from "./roku-tv-accessory";
-import { PLUGIN_NAME /*, PLATFORM_NAME*/ } from "./settings";
+import { PLUGIN_NAME } from "./settings";
 
 interface RokuTvPlatformConfig extends PlatformConfig {
   excludedDevices?: string[];
@@ -148,8 +148,6 @@ export class RokuTvPlatform implements DynamicPlatformPlugin {
         this.updateAccessory(device, uuid);
       }
     });
-
-    //this.removeStaleAccessories(devices);
     this.api.publishExternalAccessories(PLUGIN_NAME, this.accessories);
   }
 
@@ -165,11 +163,6 @@ export class RokuTvPlatform implements DynamicPlatformPlugin {
     );
     accessory.category = Categories.TELEVISION;
     new RokuAccessory(this, accessory, device, this.config.excludedApps ?? []);
- 
-    /*this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [
-      accessory,
-    ]);*/
-    
     this.accessories.push(accessory);
   }
 
@@ -190,34 +183,6 @@ export class RokuTvPlatform implements DynamicPlatformPlugin {
       );
     }
   }
-
-  /**
-   * Removes stale accessories that are no longer present in the current devices list.
-   * Unregisters the stale accessories from the platform and removes them from the accessories array.
-   
-  private removeStaleAccessories(currentDevices: RokuDevice[]) {
-    const staleAccessories = this.accessories.filter(
-      (accessory) =>
-        !currentDevices.some(
-          (device) =>
-            this.api.hap.uuid.generate(
-              `${device.client.ip}-${device.info.serialNumber}`,
-            ) === accessory.UUID,
-        ),
-    );
-
-    if (staleAccessories.length > 0) {
-      this.log.info("Removing stale accessories");
-      this.api.unregisterPlatformAccessories(
-        PLUGIN_NAME,
-        PLATFORM_NAME,
-        staleAccessories,
-      );
-      this.accessories = this.accessories.filter(
-        (accessory) => !staleAccessories.includes(accessory),
-      );
-    }
-  }*/
 }
 
 export interface RokuDevice {
