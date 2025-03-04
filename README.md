@@ -1,23 +1,19 @@
 <SPAN ALIGN="CENTER" STYLE="text-align:center">
 <DIV ALIGN="CENTER" STYLE="text-align:center">
 
-[![homebridge-better-roku: The Better Roku Plugin for Homebridge](images/banner.png)](https://github.com/watzon/homebridge-better-roku)
+[![homebridge-roku-tv: A Roku Plugin for Homebridge](images/banner.png)](https://github.com/traviswparker/homebridge-roku-tv)
 
-# Homebridge Better Roku
-[![Downloads](https://img.shields.io/npm/dt/homebridge-better-roku?color=%230559C9&logo=icloud&logoColor=%23FFFFFF&style=for-the-badge)](https://www.npmjs.com/package/homebridge-better-roku)
-[![Version](https://img.shields.io/npm/v/homebridge-better-roku?color=%230559C9&label=Latest%20Version&logo=ubiquiti&logoColor=%23FFFFFF&style=for-the-badge)](https://www.npmjs.com/package/homebridge-better-roku)
+# Homebridge Roku TV
+[![Downloads](https://img.shields.io/npm/dt/homebridge-roku-tv?color=%230559C9&logo=icloud&logoColor=%23FFFFFF&style=for-the-badge)](https://www.npmjs.com/package/homebridge-roku-tv)
+[![Version](https://img.shields.io/npm/v/homebridge-roku-tv?color=%230559C9&label=Latest%20Version&logo=ubiquiti&logoColor=%23FFFFFF&style=for-the-badge)](https://www.npmjs.com/package/homebridge-roku-tv)
 
 # Complete HomeKit support for the Roku ecosystem using [Homebridge](https://homebridge.io).
 </DIV>
 </SPAN>
 
-`homebridge-better-roku` is a plugin for Homebridge that allows you to control your Roku devices and apps.
+`homebridge-roku-tv` is a plugin for Homebridge that allows you to control your Roku devices and apps.
 
-## Why use this plugin instead of the others?
-
-I was pretty disappointed with the other Roku plugins in existence right now. They don't seem to work and aren't maintained for the most part, which led me to create this plugin.
-
-This plugin also has some marked improvements over the others, including:
+## Why use this plugin?
 
 - The ability to manually add devices to HomeKit rather than relying on auto-discovery.
 - Optional automatic discovery of Roku devices on your network.
@@ -29,9 +25,9 @@ Like the other apps, we still also have an app blocklist and the ability to set 
 
 1. Install Homebridge using the official guide [here](https://homebridge.io/install/).
 
-2. Install `homebridge-better-roku` plugin using npm:
+2. Install `homebridge-roku-tv` plugin using npm:
     ```
-    sudo npm install -g homebridge-better-roku
+    sudo npm install -g homebridge-roku-tv
     ```
 
 3. Run Homebridge with the Roku platform:
@@ -47,8 +43,8 @@ To configure the Roku platform, you will need to add the following to your `conf
 {
     "platforms": [
         {
-            "platform": "BetterRokuTVs",
-            "name": "Roku TV Platform",
+            "platform": "Roku",
+            "name": "Roku",
             "devices": [
                 {
                     "name": "Roku TV",
