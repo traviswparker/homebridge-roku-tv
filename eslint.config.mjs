@@ -18,8 +18,6 @@ export default [{
     "eslint:recommended",
     "plugin:@typescript-eslint/eslint-recommended",
     "plugin:@typescript-eslint/recommended",
-    "prettier",
-    "plugin:prettier/recommended",
 ), {
     languageOptions: {
         parser: tsParser,
@@ -30,6 +28,5 @@ export default [{
     rules: {
         "@typescript-eslint/explicit-function-return-type": "off",
         "@typescript-eslint/no-non-null-assertion": "off",
-        "prettier/prettier": "error",
     },
 }];
